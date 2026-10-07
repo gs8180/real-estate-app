@@ -22,362 +22,366 @@ import java.util.List;
 @Service
 public class PropertyServiceImpl implements PropertyService {
 
-    private final PropertyRepository propertyRepository;
-    private final PropertyHistoryRepository historyRepository;
+        private final PropertyRepository propertyRepository;
+        private final PropertyHistoryRepository historyRepository;
 
-    @Autowired
-    public PropertyServiceImpl(
-            PropertyRepository propertyRepository,
-            PropertyHistoryRepository historyRepository) {
+        @Autowired
+        public PropertyServiceImpl(
+                        PropertyRepository propertyRepository,
+                        PropertyHistoryRepository historyRepository) {
 
-        this.propertyRepository = propertyRepository;
-        this.historyRepository = historyRepository;
-    }
-
-    @Override
-    public PropertyResponseDTO createProperty(PropertyRequestDTO requestDTO) {
-
-        Property property = new Property();
-
-        property.setTitle(requestDTO.getTitle());
-        property.setAddress(requestDTO.getAddress());
-        property.setCity(requestDTO.getCity());
-        property.setState(requestDTO.getState());
-        property.setZipCode(requestDTO.getZipCode());
-
-        property.setCountry(
-                requestDTO.getCountry() != null
-                        ? requestDTO.getCountry()
-                        : "USA"
-        );
-
-        property.setPrice(requestDTO.getPrice());
-        property.setBedrooms(requestDTO.getBedrooms());
-        property.setBathrooms(requestDTO.getBathrooms());
-        property.setSquareFeet(requestDTO.getSquareFeet());
-
-        property.setPropertyType(
-                requestDTO.getPropertyType() != null
-                        ? requestDTO.getPropertyType()
-                        : "Residential"
-        );
-
-        property.setYearBuilt(requestDTO.getYearBuilt());
-        property.setDescription(requestDTO.getDescription());
-
-        property.setStatus(
-                requestDTO.getStatus() != null
-                        ? requestDTO.getStatus()
-                        : "AVAILABLE"
-        );
-
-        Property savedProperty = propertyRepository.save(property);
-
-        PropertyHistory initialHistory = new PropertyHistory();
-
-        initialHistory.setProperty(savedProperty);
-        initialHistory.setEventDate(LocalDate.now());
-        initialHistory.setEventType("LISTED");
-        initialHistory.setPrice(savedProperty.getPrice());
-        initialHistory.setDescription("Initial listing on platform");
-        initialHistory.setSource("Internal");
-
-        historyRepository.save(initialHistory);
-
-        return mapToResponseDTO(savedProperty);
-    }
-
-    @Override
-    public PropertyResponseDTO getPropertyById(Long id) {
-
-        Property property = propertyRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Property not found with ID: " + id
-                        )
-                );
-
-        return mapToResponseDTO(property);
-    }
-
-    @Override
-    public List<PropertyResponseDTO> getAllProperties() {
-
-        List<Property> properties = propertyRepository.findAll();
-
-        List<PropertyResponseDTO> responseList = new ArrayList<>();
-
-        for (Property property : properties) {
-            responseList.add(mapToResponseDTO(property));
+                this.propertyRepository = propertyRepository;
+                this.historyRepository = historyRepository;
         }
 
-        return responseList;
-    }
+        @Override
+        public PropertyResponseDTO createProperty(PropertyRequestDTO requestDTO) {
 
-    @Override
-    public PropertyResponseDTO updateProperty(
-            Long id,
-            PropertyRequestDTO requestDTO) {
+                Property property = new Property();
 
-        Property property = propertyRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Property not found with ID: " + id
-                        )
-                );
+                property.setTitle(requestDTO.getTitle());
+                property.setAddress(requestDTO.getAddress());
+                property.setCity(requestDTO.getCity());
+                property.setState(requestDTO.getState());
+                property.setZipCode(requestDTO.getZipCode());
 
-        if (requestDTO.getPrice() != null
-                && property.getPrice() != null
-                && property.getPrice().compareTo(requestDTO.getPrice()) != 0) {
+                property.setCountry(
+                                requestDTO.getCountry() != null
+                                                ? requestDTO.getCountry()
+                                                : "USA");
 
-            PropertyHistory priceHistory = new PropertyHistory();
+                property.setPrice(requestDTO.getPrice());
+                property.setBedrooms(requestDTO.getBedrooms());
+                property.setBathrooms(requestDTO.getBathrooms());
+                property.setSquareFeet(requestDTO.getSquareFeet());
 
-            priceHistory.setProperty(property);
-            priceHistory.setEventDate(LocalDate.now());
-            priceHistory.setEventType("PRICE_CHANGED");
-            priceHistory.setPrice(requestDTO.getPrice());
+                property.setPropertyType(
+                                requestDTO.getPropertyType() != null
+                                                ? requestDTO.getPropertyType()
+                                                : "Residential");
 
-            priceHistory.setDescription(
-                    "Price changed from $"
-                            + property.getPrice()
-                            + " to $"
-                            + requestDTO.getPrice()
-            );
+                property.setYearBuilt(requestDTO.getYearBuilt());
+                property.setDescription(requestDTO.getDescription());
 
-            priceHistory.setSource("Internal Update");
+                property.setStatus(
+                                requestDTO.getStatus() != null
+                                                ? requestDTO.getStatus()
+                                                : "AVAILABLE");
 
-            historyRepository.save(priceHistory);
+                Property savedProperty = propertyRepository.save(property);
+
+                PropertyHistory initialHistory = new PropertyHistory();
+
+                initialHistory.setProperty(savedProperty);
+                initialHistory.setEventDate(LocalDate.now());
+                initialHistory.setEventType("LISTED");
+                initialHistory.setPrice(savedProperty.getPrice());
+                initialHistory.setDescription("Initial listing on platform");
+                initialHistory.setSource("Internal");
+
+                historyRepository.save(initialHistory);
+
+                return mapToResponseDTO(savedProperty);
         }
 
-        property.setTitle(requestDTO.getTitle());
-        property.setAddress(requestDTO.getAddress());
-        property.setCity(requestDTO.getCity());
-        property.setState(requestDTO.getState());
-        property.setZipCode(requestDTO.getZipCode());
+        @Override
+        public PropertyResponseDTO getPropertyById(Long id) {
 
-        if (requestDTO.getCountry() != null) {
-            property.setCountry(requestDTO.getCountry());
+                Property property = propertyRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Property not found with ID: " + id));
+
+                return mapToResponseDTO(property);
         }
 
-        property.setPrice(requestDTO.getPrice());
-        property.setBedrooms(requestDTO.getBedrooms());
-        property.setBathrooms(requestDTO.getBathrooms());
-        property.setSquareFeet(requestDTO.getSquareFeet());
+        @Override
+        public List<PropertyResponseDTO> getAllProperties() {
 
-        if (requestDTO.getPropertyType() != null) {
-            property.setPropertyType(requestDTO.getPropertyType());
+                List<Property> properties = propertyRepository.findAll();
+
+                List<PropertyResponseDTO> responseList = new ArrayList<>();
+
+                for (Property property : properties) {
+                        responseList.add(mapToResponseDTO(property));
+                }
+
+                return responseList;
         }
 
-        property.setYearBuilt(requestDTO.getYearBuilt());
-        property.setDescription(requestDTO.getDescription());
+        @Override
+        public PropertyResponseDTO updateProperty(
+                        Long id,
+                        PropertyRequestDTO requestDTO) {
 
-        if (requestDTO.getStatus() != null) {
-            property.setStatus(requestDTO.getStatus());
+                Property property = propertyRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Property not found with ID: " + id));
+
+                if (requestDTO.getPrice() != null
+                                && property.getPrice() != null
+                                && property.getPrice().compareTo(requestDTO.getPrice()) != 0) {
+
+                        PropertyHistory priceHistory = new PropertyHistory();
+
+                        priceHistory.setProperty(property);
+                        priceHistory.setEventDate(LocalDate.now());
+                        priceHistory.setEventType("PRICE_CHANGED");
+                        priceHistory.setPrice(requestDTO.getPrice());
+
+                        priceHistory.setDescription(
+                                        "Price changed from $"
+                                                        + property.getPrice()
+                                                        + " to $"
+                                                        + requestDTO.getPrice());
+
+                        priceHistory.setSource("Internal Update");
+
+                        historyRepository.save(priceHistory);
+                }
+
+                property.setTitle(requestDTO.getTitle());
+                property.setAddress(requestDTO.getAddress());
+                property.setCity(requestDTO.getCity());
+                property.setState(requestDTO.getState());
+                property.setZipCode(requestDTO.getZipCode());
+
+                if (requestDTO.getCountry() != null) {
+                        property.setCountry(requestDTO.getCountry());
+                }
+
+                property.setPrice(requestDTO.getPrice());
+                property.setBedrooms(requestDTO.getBedrooms());
+                property.setBathrooms(requestDTO.getBathrooms());
+                property.setSquareFeet(requestDTO.getSquareFeet());
+
+                if (requestDTO.getPropertyType() != null) {
+                        property.setPropertyType(requestDTO.getPropertyType());
+                }
+
+                property.setYearBuilt(requestDTO.getYearBuilt());
+                property.setDescription(requestDTO.getDescription());
+
+                if (requestDTO.getStatus() != null) {
+                        property.setStatus(requestDTO.getStatus());
+                }
+
+                Property updatedProperty = propertyRepository.save(property);
+
+                return mapToResponseDTO(updatedProperty);
         }
 
-        Property updatedProperty = propertyRepository.save(property);
+        @Override
+        public void deleteProperty(Long id) {
 
-        return mapToResponseDTO(updatedProperty);
-    }
+                Property property = propertyRepository.findById(id)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Property not found with ID: " + id));
 
-    @Override
-    public void deleteProperty(Long id) {
-
-        Property property = propertyRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Property not found with ID: " + id
-                        )
-                );
-
-        propertyRepository.delete(property);
-    }
-
-    @Override
-    public List<PropertyResponseDTO> searchProperties(
-            PropertySearchCriteriaDTO criteria) {
-
-        List<Property> searchResults =
-                propertyRepository.searchProperties(
-                        criteria.getQuery(),
-                        criteria.getCity(),
-                        criteria.getState(),
-                        criteria.getZipCode(),
-                        criteria.getPropertyType(),
-                        criteria.getMinPrice(),
-                        criteria.getMaxPrice(),
-                        criteria.getMinBedrooms(),
-                        criteria.getMinBathrooms(),
-                        criteria.getStatus()
-                );
-
-        List<PropertyResponseDTO> responseList = new ArrayList<>();
-
-        for (Property property : searchResults) {
-            responseList.add(mapToResponseDTO(property));
+                propertyRepository.delete(property);
         }
 
-        return responseList;
-    }
+        @Override
+        public List<PropertyResponseDTO> searchProperties(
+                        PropertySearchCriteriaDTO criteria) {
 
-    @Override
-    public List<PropertyResponseDTO> getComparableProperties(
-            Long propertyId) {
+                List<Property> all = propertyRepository.findAll();
+                String q = criteria.getQuery() != null ? criteria.getQuery().trim().toLowerCase() : null;
+                String city = criteria.getCity() != null ? criteria.getCity().trim().toLowerCase() : null;
+                String state = criteria.getState() != null ? criteria.getState().trim().toLowerCase() : null;
+                String zip = criteria.getZipCode() != null ? criteria.getZipCode().trim() : null;
+                String type = criteria.getPropertyType() != null ? criteria.getPropertyType().trim().toLowerCase()
+                                : null;
+                String status = criteria.getStatus() != null ? criteria.getStatus().trim().toLowerCase() : null;
 
-        Property property = propertyRepository.findById(propertyId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Property not found with ID: " + propertyId
-                        )
-                );
+                List<PropertyResponseDTO> responseList = new ArrayList<>();
+                for (Property p : all) {
+                        if (q != null && !q.isEmpty()) {
+                                boolean matchTitle = p.getTitle() != null && p.getTitle().toLowerCase().contains(q);
+                                boolean matchAddress = p.getAddress() != null
+                                                && p.getAddress().toLowerCase().contains(q);
+                                boolean matchCity = p.getCity() != null && p.getCity().toLowerCase().contains(q);
+                                boolean matchType = p.getPropertyType() != null
+                                                && p.getPropertyType().toLowerCase().contains(q);
+                                if (!matchTitle && !matchAddress && !matchCity && !matchType) {
+                                        continue;
+                                }
+                        }
+                        if (city != null && !city.isEmpty()
+                                        && (p.getCity() == null || !p.getCity().toLowerCase().contains(city))) {
+                                continue;
+                        }
+                        if (state != null && !state.isEmpty()
+                                        && (p.getState() == null || !p.getState().equalsIgnoreCase(state))) {
+                                continue;
+                        }
+                        if (zip != null && !zip.isEmpty() && (p.getZipCode() == null || !p.getZipCode().equals(zip))) {
+                                continue;
+                        }
+                        if (type != null && !type.isEmpty() && (p.getPropertyType() == null
+                                        || !p.getPropertyType().toLowerCase().contains(type))) {
+                                continue;
+                        }
+                        if (status != null && !status.isEmpty()
+                                        && (p.getStatus() == null || !p.getStatus().equalsIgnoreCase(status))) {
+                                continue;
+                        }
+                        if (criteria.getMinPrice() != null && (p.getPrice() == null
+                                        || p.getPrice().compareTo(criteria.getMinPrice()) < 0)) {
+                                continue;
+                        }
+                        if (criteria.getMaxPrice() != null && (p.getPrice() == null
+                                        || p.getPrice().compareTo(criteria.getMaxPrice()) > 0)) {
+                                continue;
+                        }
+                        if (criteria.getMinBedrooms() != null
+                                        && (p.getBedrooms() == null || p.getBedrooms() < criteria.getMinBedrooms())) {
+                                continue;
+                        }
+                        if (criteria.getMinBathrooms() != null && (p.getBathrooms() == null
+                                        || p.getBathrooms() < criteria.getMinBathrooms())) {
+                                continue;
+                        }
+                        responseList.add(mapToResponseDTO(p));
+                }
 
-        if (property.getPrice() == null
-                || property.getCity() == null
-                || property.getPropertyType() == null) {
-
-            return new ArrayList<>();
+                return responseList;
         }
 
-        BigDecimal priceDifference =
-                property.getPrice()
-                        .multiply(new BigDecimal("0.20"));
+        @Override
+        public List<PropertyResponseDTO> getComparableProperties(
+                        Long propertyId) {
 
-        BigDecimal minPrice =
-                property.getPrice()
-                        .subtract(priceDifference);
+                Property property = propertyRepository.findById(propertyId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Property not found with ID: " + propertyId));
 
-        BigDecimal maxPrice =
-                property.getPrice()
-                        .add(priceDifference);
+                if (property.getPrice() == null
+                                || property.getCity() == null
+                                || property.getPropertyType() == null) {
 
-        List<Property> comparableProperties =
-                propertyRepository.findComparableProperties(
-                        propertyId,
-                        property.getCity(),
-                        property.getPropertyType(),
-                        minPrice,
-                        maxPrice
-                );
+                        return new ArrayList<>();
+                }
 
-        List<PropertyResponseDTO> responseList =
-                new ArrayList<>();
+                BigDecimal priceDifference = property.getPrice()
+                                .multiply(new BigDecimal("0.20"));
 
-        for (Property comparableProperty : comparableProperties) {
-            responseList.add(
-                    mapToResponseDTO(comparableProperty)
-            );
+                BigDecimal minPrice = property.getPrice()
+                                .subtract(priceDifference);
+
+                BigDecimal maxPrice = property.getPrice()
+                                .add(priceDifference);
+
+                List<Property> comparableProperties = propertyRepository.findComparableProperties(
+                                propertyId,
+                                property.getCity(),
+                                property.getPropertyType(),
+                                minPrice,
+                                maxPrice);
+
+                List<PropertyResponseDTO> responseList = new ArrayList<>();
+
+                for (Property comparableProperty : comparableProperties) {
+                        responseList.add(
+                                        mapToResponseDTO(comparableProperty));
+                }
+
+                return responseList;
         }
 
-        return responseList;
-    }
+        @Override
+        public List<PropertyHistoryDTO> getPropertyHistory(
+                        Long propertyId) {
 
-    @Override
-    public List<PropertyHistoryDTO> getPropertyHistory(
-            Long propertyId) {
+                if (!propertyRepository.existsById(propertyId)) {
+                        throw new ResourceNotFoundException(
+                                        "Property not found with ID: " + propertyId);
+                }
 
-        if (!propertyRepository.existsById(propertyId)) {
-            throw new ResourceNotFoundException(
-                    "Property not found with ID: " + propertyId
-            );
+                Sort sort = Sort.by(
+                                Sort.Direction.DESC,
+                                "eventDate");
+
+                List<PropertyHistory> historyList = historyRepository.findByPropertyId(
+                                propertyId,
+                                sort);
+
+                List<PropertyHistoryDTO> responseList = new ArrayList<>();
+
+                for (PropertyHistory history : historyList) {
+                        responseList.add(
+                                        mapHistoryToDTO(history));
+                }
+
+                return responseList;
         }
 
-        Sort sort = Sort.by(
-                Sort.Direction.DESC,
-                "eventDate"
-        );
+        @Override
+        public PropertyHistoryDTO addPropertyHistory(
+                        Long propertyId,
+                        PropertyHistoryDTO historyDTO) {
 
-        List<PropertyHistory> historyList =
-                historyRepository.findByPropertyId(
-                        propertyId,
-                        sort
-                );
+                Property property = propertyRepository.findById(propertyId)
+                                .orElseThrow(() -> new ResourceNotFoundException(
+                                                "Property not found with ID: " + propertyId));
 
-        List<PropertyHistoryDTO> responseList =
-                new ArrayList<>();
+                PropertyHistory history = new PropertyHistory();
 
-        for (PropertyHistory history : historyList) {
-            responseList.add(
-                    mapHistoryToDTO(history)
-            );
+                history.setProperty(property);
+                history.setEventDate(historyDTO.getEventDate());
+                history.setEventType(historyDTO.getEventType());
+                history.setPrice(historyDTO.getPrice());
+                history.setDescription(historyDTO.getDescription());
+
+                history.setSource(
+                                historyDTO.getSource() != null
+                                                ? historyDTO.getSource()
+                                                : "Manual Entry");
+
+                PropertyHistory savedHistory = historyRepository.save(history);
+
+                return mapHistoryToDTO(savedHistory);
         }
 
-        return responseList;
-    }
+        private PropertyResponseDTO mapToResponseDTO(
+                        Property property) {
 
-    @Override
-    public PropertyHistoryDTO addPropertyHistory(
-            Long propertyId,
-            PropertyHistoryDTO historyDTO) {
+                PropertyResponseDTO dto = new PropertyResponseDTO();
 
-        Property property = propertyRepository.findById(propertyId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Property not found with ID: " + propertyId
-                        )
-                );
+                dto.setId(property.getId());
+                dto.setTitle(property.getTitle());
+                dto.setAddress(property.getAddress());
+                dto.setCity(property.getCity());
+                dto.setState(property.getState());
+                dto.setZipCode(property.getZipCode());
+                dto.setCountry(property.getCountry());
+                dto.setPrice(property.getPrice());
+                dto.setBedrooms(property.getBedrooms());
+                dto.setBathrooms(property.getBathrooms());
+                dto.setSquareFeet(property.getSquareFeet());
+                dto.setPropertyType(property.getPropertyType());
+                dto.setYearBuilt(property.getYearBuilt());
+                dto.setDescription(property.getDescription());
+                dto.setStatus(property.getStatus());
+                dto.setCreatedAt(property.getCreatedAt());
+                dto.setUpdatedAt(property.getUpdatedAt());
 
-        PropertyHistory history = new PropertyHistory();
+                return dto;
+        }
 
-        history.setProperty(property);
-        history.setEventDate(historyDTO.getEventDate());
-        history.setEventType(historyDTO.getEventType());
-        history.setPrice(historyDTO.getPrice());
-        history.setDescription(historyDTO.getDescription());
+        private PropertyHistoryDTO mapHistoryToDTO(
+                        PropertyHistory history) {
 
-        history.setSource(
-                historyDTO.getSource() != null
-                        ? historyDTO.getSource()
-                        : "Manual Entry"
-        );
+                PropertyHistoryDTO dto = new PropertyHistoryDTO();
 
-        PropertyHistory savedHistory =
-                historyRepository.save(history);
+                dto.setId(history.getId());
+                dto.setPropertyId(history.getProperty().getId());
+                dto.setEventDate(history.getEventDate());
+                dto.setEventType(history.getEventType());
+                dto.setPrice(history.getPrice());
+                dto.setDescription(history.getDescription());
+                dto.setSource(history.getSource());
+                dto.setRecordedAt(history.getRecordedAt());
 
-        return mapHistoryToDTO(savedHistory);
-    }
-
-    private PropertyResponseDTO mapToResponseDTO(
-            Property property) {
-
-        PropertyResponseDTO dto =
-                new PropertyResponseDTO();
-
-        dto.setId(property.getId());
-        dto.setTitle(property.getTitle());
-        dto.setAddress(property.getAddress());
-        dto.setCity(property.getCity());
-        dto.setState(property.getState());
-        dto.setZipCode(property.getZipCode());
-        dto.setCountry(property.getCountry());
-        dto.setPrice(property.getPrice());
-        dto.setBedrooms(property.getBedrooms());
-        dto.setBathrooms(property.getBathrooms());
-        dto.setSquareFeet(property.getSquareFeet());
-        dto.setPropertyType(property.getPropertyType());
-        dto.setYearBuilt(property.getYearBuilt());
-        dto.setDescription(property.getDescription());
-        dto.setStatus(property.getStatus());
-        dto.setCreatedAt(property.getCreatedAt());
-        dto.setUpdatedAt(property.getUpdatedAt());
-
-        return dto;
-    }
-
-    private PropertyHistoryDTO mapHistoryToDTO(
-            PropertyHistory history) {
-
-        PropertyHistoryDTO dto =
-                new PropertyHistoryDTO();
-
-        dto.setId(history.getId());
-        dto.setPropertyId(history.getProperty().getId());
-        dto.setEventDate(history.getEventDate());
-        dto.setEventType(history.getEventType());
-        dto.setPrice(history.getPrice());
-        dto.setDescription(history.getDescription());
-        dto.setSource(history.getSource());
-        dto.setRecordedAt(history.getRecordedAt());
-
-        return dto;
-    }
+                return dto;
+        }
 }

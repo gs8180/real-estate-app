@@ -197,24 +197,53 @@ public class PropertyServiceImpl implements PropertyService {
     public List<PropertyResponseDTO> searchProperties(
             PropertySearchCriteriaDTO criteria) {
 
-        List<Property> searchResults =
-                propertyRepository.searchProperties(
-                        criteria.getQuery(),
-                        criteria.getCity(),
-                        criteria.getState(),
-                        criteria.getZipCode(),
-                        criteria.getPropertyType(),
-                        criteria.getMinPrice(),
-                        criteria.getMaxPrice(),
-                        criteria.getMinBedrooms(),
-                        criteria.getMinBathrooms(),
-                        criteria.getStatus()
-                );
+        List<Property> all = propertyRepository.findAll();
+        String q = criteria.getQuery() != null ? criteria.getQuery().trim().toLowerCase() : null;
+        String city = criteria.getCity() != null ? criteria.getCity().trim().toLowerCase() : null;
+        String state = criteria.getState() != null ? criteria.getState().trim().toLowerCase() : null;
+        String zip = criteria.getZipCode() != null ? criteria.getZipCode().trim() : null;
+        String type = criteria.getPropertyType() != null ? criteria.getPropertyType().trim().toLowerCase() : null;
+        String status = criteria.getStatus() != null ? criteria.getStatus().trim().toLowerCase() : null;
 
         List<PropertyResponseDTO> responseList = new ArrayList<>();
-
-        for (Property property : searchResults) {
-            responseList.add(mapToResponseDTO(property));
+        for (Property p : all) {
+            if (q != null && !q.isEmpty()) {
+                boolean matchTitle = p.getTitle() != null && p.getTitle().toLowerCase().contains(q);
+                boolean matchAddress = p.getAddress() != null && p.getAddress().toLowerCase().contains(q);
+                boolean matchCity = p.getCity() != null && p.getCity().toLowerCase().contains(q);
+                boolean matchType = p.getPropertyType() != null && p.getPropertyType().toLowerCase().contains(q);
+                if (!matchTitle && !matchAddress && !matchCity && !matchType) {
+                    continue;
+                }
+            }
+            if (city != null && !city.isEmpty() && (p.getCity() == null || !p.getCity().toLowerCase().contains(city))) {
+                continue;
+            }
+            if (state != null && !state.isEmpty() && (p.getState() == null || !p.getState().equalsIgnoreCase(state))) {
+                continue;
+            }
+            if (zip != null && !zip.isEmpty() && (p.getZipCode() == null || !p.getZipCode().equals(zip))) {
+                continue;
+            }
+            if (type != null && !type.isEmpty() && (p.getPropertyType() == null || !p.getPropertyType().toLowerCase().contains(type))) {
+                continue;
+            }
+            if (status != null && !status.isEmpty() && (p.getStatus() == null || !p.getStatus().equalsIgnoreCase(status))) {
+                continue;
+            }
+            if (criteria.getMinPrice() != null && (p.getPrice() == null || p.getPrice().compareTo(criteria.getMinPrice()) < 0)) {
+                continue;
+            }
+            if (criteria.getMaxPrice() != null && (p.getPrice() == null || p.getPrice().compareTo(criteria.getMaxPrice()) > 0)) {
+                continue;
+            }
+            if (criteria.getMinBedrooms() != null && (p.getBedrooms() == null || p.getBedrooms() < criteria.getMinBedrooms())) {
+                continue;
+            }
+            if (criteria.getMinBathrooms() != null && (p.getBathrooms() == null || p.getBathrooms() < criteria.getMinBathrooms())) {
+                continue;
+            }
+            responseList.add(mapToResponseDTO(p));
         }
 
         return responseList;

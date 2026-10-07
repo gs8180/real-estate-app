@@ -25,19 +25,19 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
     List<Property> findAllByOrderByPriceDesc();
 
     @Query("SELECT p FROM Property p WHERE " +
-           "(:query IS NULL OR " +
-           "LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(p.address) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(p.city) LIKE LOWER(CONCAT('%', :query, '%'))) AND " +
-           "(:city IS NULL OR LOWER(p.city) = LOWER(:city)) AND " +
-           "(:state IS NULL OR LOWER(p.state) = LOWER(:state)) AND " +
+           "(CAST(:query AS String) IS NULL OR " +
+           "LOWER(p.title) LIKE LOWER(CONCAT('%', CAST(:query AS String), '%')) OR " +
+           "LOWER(p.address) LIKE LOWER(CONCAT('%', CAST(:query AS String), '%')) OR " +
+           "LOWER(p.city) LIKE LOWER(CONCAT('%', CAST(:query AS String), '%'))) AND " +
+           "(CAST(:city AS String) IS NULL OR LOWER(p.city) = LOWER(CAST(:city AS String))) AND " +
+           "(CAST(:state AS String) IS NULL OR LOWER(p.state) = LOWER(CAST(:state AS String))) AND " +
            "(:zipCode IS NULL OR p.zipCode = :zipCode) AND " +
-           "(:propertyType IS NULL OR LOWER(p.propertyType) = LOWER(:propertyType)) AND " +
+           "(CAST(:propertyType AS String) IS NULL OR LOWER(p.propertyType) = LOWER(CAST(:propertyType AS String))) AND " +
            "(:minPrice IS NULL OR p.price >= :minPrice) AND " +
            "(:maxPrice IS NULL OR p.price <= :maxPrice) AND " +
            "(:minBedrooms IS NULL OR p.bedrooms >= :minBedrooms) AND " +
            "(:minBathrooms IS NULL OR p.bathrooms >= :minBathrooms) AND " +
-           "(:status IS NULL OR LOWER(p.status) = LOWER(:status))")
+           "(CAST(:status AS String) IS NULL OR LOWER(p.status) = LOWER(CAST(:status AS String)))")
     List<Property> searchProperties(
             @Param("query") String query,
             @Param("city") String city,
@@ -53,8 +53,8 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
 
     @Query("SELECT p FROM Property p WHERE " +
            "p.id <> :propertyId AND " +
-           "LOWER(p.city) = LOWER(:city) AND " +
-           "LOWER(p.propertyType) = LOWER(:propertyType) AND " +
+           "LOWER(p.city) = LOWER(CAST(:city AS String)) AND " +
+           "LOWER(p.propertyType) = LOWER(CAST(:propertyType AS String)) AND " +
            "p.price BETWEEN :minPrice AND :maxPrice")
     List<Property> findComparableProperties(
             @Param("propertyId") Long propertyId,
