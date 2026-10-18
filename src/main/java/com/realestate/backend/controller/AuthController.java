@@ -1,80 +1,53 @@
-
 package com.realestate.backend.controller;
 
 import com.realestate.backend.dto.LoginRequest;
-import com.realestate.backend.dto.LoginResponse;
 import com.realestate.backend.dto.RegisterRequest;
-import com.realestate.backend.dto.UserResponse;
+import com.realestate.backend.service.AuthService;
 import com.realestate.backend.entity.User;
-import com.realestate.backend.security.JwtService;
-import com.realestate.backend.service.UserService;
-
+import com.realestate.backend.dto.UserProfileResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    private final UserService userService;
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
+    private final AuthService authService;
 
-    public AuthController(
-            UserService userService,
-            AuthenticationManager authenticationManager,
-            JwtService jwtService) {
-
-        this.userService = userService;
-        this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
+    public AuthController(AuthService authService) {
+        this.authService = authService;
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(
+    public ResponseEntity<UserProfileResponse> register(
             @RequestBody RegisterRequest request) {
 
-        User user = userService.registerUser(request);
-
-        UserResponse response = new UserResponse(
+        User user = authService.register(request);
+        UserProfileResponse response = new UserProfileResponse(
                 user.getId(),
                 user.getName(),
-                user.getEmail()
+                user.getEmail(),
+                user.getRole()
         );
-
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(
+    public ResponseEntity<Map<String, String>> login(
             @RequestBody LoginRequest request) {
 
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-
-        String token = jwtService.generateToken(
-                request.getEmail()
-        );
+        String token = authService.login(request);
 
         return ResponseEntity.ok(
-                new LoginResponse(token)
+                Map.of(
+                        "token", token,
+                        "message", "Login successful"
+                )
         );
     }
-
-    @GetMapping("/test")
-    public ResponseEntity<String> testProtectedEndpoint() {
-        return ResponseEntity.ok("JWT authentication successful!");
-    }
 }
-

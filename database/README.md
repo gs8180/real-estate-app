@@ -1,6 +1,6 @@
 # Database — Real Estate Due Diligence Agent
 
-PostgreSQL database for the **Autonomous Property Research and Real Estate Risk Assessment Intelligence System** (Infosys Springboard Internship — Team Two).
+PostgreSQL database for the **Autonomous Property Research and Real Estate Risk Assessment Intelligence System**.
 
 ## Overview
 

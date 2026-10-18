@@ -10,22 +10,30 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(nullable = false)
+    private String role = "BUYER";
 
     public User() {
     }
 
-    public User(String name, String email, String password, Role role) {
-        this.name = name;
+    public User(String email, String password, String role) {
+        this.name = email != null ? email.split("@")[0] : "User";
+        this.email = email;
+        this.password = password;
+        this.role = role;
+    }
+
+    public User(String name, String email, String password, String role) {
+        this.name = (name != null && !name.isBlank()) ? name : (email != null ? email.split("@")[0] : "User");
         this.email = email;
         this.password = password;
         this.role = role;
@@ -63,11 +71,11 @@ public class User {
         this.password = password;
     }
 
-    public Role getRole() {
+    public String getRole() {
         return role;
     }
 
-    public void setRole(Role role) {
+    public void setRole(String role) {
         this.role = role;
     }
 }
