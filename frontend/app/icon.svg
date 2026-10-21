@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="60%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="roofGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="64" height="64" rx="16" fill="url(#bgGrad)" />
+
+  <!-- Background Glow Ring -->
+  <rect x="1.5" y="1.5" width="61" height="61" rx="14.5" fill="none" stroke="#38bdf8" stroke-opacity="0.3" stroke-width="2" />
+
+  <!-- Center Architecture (Modern Building & Shield) -->
+  <!-- Left Wing -->
+  <path d="M14 30 L22 30 L22 49 L14 49 C12.9 49 12 48.1 12 47 L12 32 C12 30.9 12.9 30 14 30 Z" fill="#60a5fa" opacity="0.85" />
+  
+  <!-- Main Center Tower -->
+  <path d="M22 15 C22 13.9 22.9 13 24 13 L36 13 C37.1 13 38 13.9 38 15 L38 49 L22 49 Z" fill="#ffffff" />
+  
+  <!-- Right Wing -->
+  <path d="M38 23 L46 23 C47.1 23 48 23.9 48 25 L48 47 C48 48.1 47.1 49 46 49 L38 49 Z" fill="#93c5fd" opacity="0.9" />
+
+  <!-- Center Tower Windows -->
+  <rect x="25.5" y="18" width="3.5" height="4.5" rx="0.8" fill="#1e3a8a" />
+  <rect x="31" y="18" width="3.5" height="4.5" rx="0.8" fill="#1e3a8a" />
+  <rect x="25.5" y="25" width="3.5" height="4.5" rx="0.8" fill="#1e3a8a" />
+  <rect x="31" y="25" width="3.5" height="4.5" rx="0.8" fill="#1e3a8a" />
+  <rect x="25.5" y="32" width="3.5" height="4.5" rx="0.8" fill="#1e3a8a" />
+  <rect x="31" y="32" width="3.5" height="4.5" rx="0.8" fill="#1e3a8a" />
+
+  <!-- Right Wing Windows -->
+  <rect x="41" y="28" width="3.5" height="4" rx="0.8" fill="#1e3a8a" />
+  <rect x="41" y="35" width="3.5" height="4" rx="0.8" fill="#1e3a8a" />
+
+  <!-- Left Wing Windows -->
+  <rect x="15" y="35" width="3.5" height="4" rx="0.8" fill="#0f172a" />
+
+  <!-- AI Intelligence Star / Sparkle in Top Right -->
+  <path d="M50 8 L51.2 11.8 L55 13 L51.2 14.2 L50 18 L48.8 14.2 L45 13 L48.8 11.8 Z" fill="#38bdf8" />
+  <circle cx="50" cy="13" r="1.5" fill="#ffffff" />
+
+  <!-- Ground Accent Line -->
+  <rect x="10" y="49" width="44" height="2.5" rx="1.2" fill="#38bdf8" />
+</svg>
