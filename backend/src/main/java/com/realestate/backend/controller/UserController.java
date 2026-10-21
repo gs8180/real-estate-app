@@ -39,8 +39,9 @@ public class UserController {
                 return ResponseEntity.ok(profile);
         }
 
-        // Get all registered users
+        // Get all registered users (strictly restricted to administrators)
         @GetMapping
+        @org.springframework.security.access.prepost.PreAuthorize("hasRole('ADMINISTRATOR')")
         public ResponseEntity<List<User>> getAllUsers() {
                 return ResponseEntity.ok(userRepository.findAll());
         }

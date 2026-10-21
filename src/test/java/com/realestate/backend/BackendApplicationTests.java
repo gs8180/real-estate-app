@@ -218,36 +218,45 @@ class BackendApplicationTests {
 
 	@Test
 	void testGoogleOAuthSuccessHandlerDirect() throws Exception {
-		// Test GoogleOAuth2SuccessHandler with an OidcUser mock
 		com.realestate.backend.config.GoogleOAuth2SuccessHandler handler =
 				new com.realestate.backend.config.GoogleOAuth2SuccessHandler(jwtService, userRepository);
 
+		String newEmail = "google_new_" + System.currentTimeMillis() + "@gmail.com";
 		org.springframework.security.oauth2.core.oidc.user.OidcUser oidcUser =
 				org.mockito.Mockito.mock(org.springframework.security.oauth2.core.oidc.user.OidcUser.class);
-		org.mockito.Mockito.when(oidcUser.getEmail()).thenReturn("google_test_" + System.currentTimeMillis() + "@gmail.com");
-		org.mockito.Mockito.when(oidcUser.getFullName()).thenReturn("Google User");
+		org.mockito.Mockito.when(oidcUser.getEmail()).thenReturn(newEmail);
+		org.mockito.Mockito.when(oidcUser.getFullName()).thenReturn("Google New User");
 		org.mockito.Mockito.when(oidcUser.getEmailVerified()).thenReturn(true);
 
 		org.springframework.security.core.Authentication auth =
 				new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(oidcUser, null);
 
-		org.springframework.mock.web.MockHttpServletRequest request = new org.springframework.mock.web.MockHttpServletRequest();
-		org.springframework.mock.web.MockHttpServletResponse response = new org.springframework.mock.web.MockHttpServletResponse();
+		// 1. First time login - user does not exist in DB yet, should redirect to /register
+		org.springframework.mock.web.MockHttpServletRequest request1 = new org.springframework.mock.web.MockHttpServletRequest();
+		org.springframework.mock.web.MockHttpServletResponse response1 = new org.springframework.mock.web.MockHttpServletResponse();
 
-		handler.onAuthenticationSuccess(request, response, auth);
+		handler.onAuthenticationSuccess(request1, response1, auth);
 
-		// Assert redirection to configured frontend URL with JWT token parameter
-		assertEquals(302, response.getStatus());
-		String redirectUrl = response.getRedirectedUrl();
-		assertNotNull(redirectUrl);
-		assertTrue(redirectUrl.contains("/login/success?token="));
+		assertEquals(302, response1.getStatus());
+		String registerRedirectUrl = response1.getRedirectedUrl();
+		assertNotNull(registerRedirectUrl);
+		assertTrue(registerRedirectUrl.contains("/register"));
+		assertTrue(registerRedirectUrl.contains("google=true"));
+		assertTrue(registerRedirectUrl.contains(java.net.URLEncoder.encode(newEmail, java.nio.charset.StandardCharsets.UTF_8)));
 
-		// Assert that user was persisted in database
-		User createdUser = userRepository.findByEmail(oidcUser.getEmail()).orElse(null);
-		assertNotNull(createdUser);
-		assertEquals("Google User", createdUser.getName());
-		assertEquals("BUYER", createdUser.getRole());
+		// 2. Once account is created in DB, subsequent login goes directly to login/success (dashboard)
+		User savedUser = userRepository.save(new User("Google New User", newEmail, "hashedpass", "REAL_ESTATE_AGENT"));
+		cleanupUserIds.add(savedUser.getId());
 
-		cleanupUserIds.add(createdUser.getId());
+		org.springframework.mock.web.MockHttpServletRequest request2 = new org.springframework.mock.web.MockHttpServletRequest();
+		org.springframework.mock.web.MockHttpServletResponse response2 = new org.springframework.mock.web.MockHttpServletResponse();
+
+		handler.onAuthenticationSuccess(request2, response2, auth);
+
+		assertEquals(302, response2.getStatus());
+		String successRedirectUrl = response2.getRedirectedUrl();
+		assertNotNull(successRedirectUrl);
+		assertTrue(successRedirectUrl.contains("/login/success?token="));
+		assertTrue(successRedirectUrl.contains("role=REAL_ESTATE_AGENT"));
 	}
 }

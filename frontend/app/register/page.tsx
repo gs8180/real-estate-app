@@ -1,9 +1,8 @@
-
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Building2,
   User,
@@ -12,13 +11,20 @@ import {
   Eye,
   EyeOff,
   ArrowRight,
+  ShieldCheck,
+  CheckCircle2,
 } from "lucide-react";
 
 const API_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080";
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const googleEmail = searchParams.get("email") || "";
+  const googleName = searchParams.get("name") || "";
+  const isGoogle = searchParams.get("google") === "true" || !!googleEmail;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -30,9 +36,16 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleRegister = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  useEffect(() => {
+    if (googleName) {
+      setName(googleName);
+    }
+    if (googleEmail) {
+      setEmail(googleEmail);
+    }
+  }, [googleName, googleEmail]);
+
+  const handleRegister = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
     setSuccess("");
@@ -56,8 +69,8 @@ export default function RegisterPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name,
-          email,
+          name: name.trim(),
+          email: email.trim(),
           password,
           role,
         }),
@@ -71,11 +84,17 @@ export default function RegisterPage() {
         );
       }
 
-      setSuccess("Account created successfully. You can now sign in.");
+      if (isGoogle) {
+        setSuccess(
+          `Account created with role ${role.replaceAll("_", " ")}! You can now log in with Google to enter your dashboard directly.`
+        );
+      } else {
+        setSuccess("Account created successfully. You can now sign in.");
+      }
 
       setTimeout(() => {
         router.push("/");
-      }, 1500);
+      }, 2000);
     } catch (err) {
       setError(
         err instanceof Error
@@ -107,17 +126,37 @@ export default function RegisterPage() {
           </div>
 
           <p className="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
-            Get started
+            {isGoogle ? "Complete Google Registration" : "Get started"}
           </p>
 
           <h2 className="text-3xl font-extrabold tracking-tight text-slate-900">
-            Create your account
+            {isGoogle ? "Choose your role" : "Create your account"}
           </h2>
 
           <p className="mt-2 text-sm text-slate-500">
-            Set up your property intelligence workspace.
+            {isGoogle
+              ? "Select your workspace role to finalize your Google account setup."
+              : "Set up your property intelligence workspace."}
           </p>
         </header>
+
+        {isGoogle && (
+          <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50/70 p-4 text-blue-900">
+            <div className="flex items-start gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-600 font-extrabold text-white text-sm">
+                G
+              </span>
+              <div>
+                <p className="text-sm font-semibold text-blue-950">
+                  Google Authentication Verified
+                </p>
+                <p className="mt-0.5 text-xs text-blue-700">
+                  Select your role below. After creating your account, next time you sign in with Google, you will go directly to your dashboard.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleRegister} className="space-y-5">
           <div>
@@ -145,25 +184,39 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="email"
-              className="mb-2 block text-sm font-semibold text-slate-700"
-            >
-              Email address
-            </label>
+            <div className="mb-2 flex items-center justify-between">
+              <label
+                htmlFor="email"
+                className="block text-sm font-semibold text-slate-700"
+              >
+                Email address
+              </label>
+              {isGoogle && (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-600">
+                  <CheckCircle2 size={13} /> Verified by Google
+                </span>
+              )}
+            </div>
 
-            <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 focus-within:border-blue-500">
-              <Mail size={18} className="text-slate-400" />
+            <div
+              className={`flex items-center gap-3 rounded-xl border px-4 ${
+                isGoogle
+                  ? "border-green-200 bg-green-50/30 text-slate-700"
+                  : "border-slate-200 focus-within:border-blue-500"
+              }`}
+            >
+              <Mail size={18} className={isGoogle ? "text-green-600" : "text-slate-400"} />
 
               <input
                 id="email"
                 type="email"
                 autoComplete="email"
                 required
+                readOnly={isGoogle}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full py-4 text-sm outline-none"
+                className="w-full py-4 text-sm outline-none bg-transparent"
               />
             </div>
           </div>
@@ -173,29 +226,25 @@ export default function RegisterPage() {
               htmlFor="role"
               className="mb-2 block text-sm font-semibold text-slate-700"
             >
-              Select your role
+              Select your workspace role <span className="text-red-500">*</span>
             </label>
 
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm outline-none focus:border-blue-500"
-            >
-              <option value="BUYER">Buyer</option>
-              <option value="REAL_ESTATE_AGENT">
-                Real Estate Agent
-              </option>
-              <option value="LEGAL_REVIEWER">
-                Legal Reviewer
-              </option>
-              <option value="FINANCIAL_INSTITUTION">
-                Financial Institution
-              </option>
-            </select>
+            <div className="relative">
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm font-medium outline-none focus:border-blue-500"
+              >
+                <option value="BUYER">Buyer (Search properties, view diligence reports)</option>
+                <option value="REAL_ESTATE_AGENT">Real Estate Agent (Manage listings & analytics)</option>
+                <option value="LEGAL_REVIEWER">Legal Reviewer (Zoning, permits, title diligence)</option>
+                <option value="FINANCIAL_INSTITUTION">Financial Institution (Mortgages & risk notes)</option>
+              </select>
+            </div>
 
             <p className="mt-2 text-xs text-slate-500">
-              Administrator access must be assigned securely by an admin.
+              Select the role that matches your responsibilities. Administrator access must be assigned securely by an admin.
             </p>
           </div>
 
@@ -204,7 +253,7 @@ export default function RegisterPage() {
               htmlFor="password"
               className="mb-2 block text-sm font-semibold text-slate-700"
             >
-              Password
+              {isGoogle ? "Set account password" : "Password"}
             </label>
 
             <div className="flex items-center gap-3 rounded-xl border border-slate-200 px-4 focus-within:border-blue-500">
@@ -258,7 +307,7 @@ export default function RegisterPage() {
           {error && (
             <p
               role="alert"
-              className="rounded-xl bg-red-50 p-3 text-sm text-red-700"
+              className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700"
             >
               {error}
             </p>
@@ -267,7 +316,7 @@ export default function RegisterPage() {
           {success && (
             <p
               role="status"
-              className="rounded-xl bg-green-50 p-3 text-sm text-green-700"
+              className="rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-700"
             >
               {success}
             </p>
@@ -276,9 +325,9 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex w-full items-center justify-center gap-3 rounded-xl bg-blue-600 px-5 py-4 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 shadow-lg shadow-blue-600/20"
           >
-            {loading ? "Creating account..." : "Create account"}
+            {loading ? "Creating account..." : isGoogle ? "Complete Registration" : "Create account"}
             {!loading && <ArrowRight size={19} />}
           </button>
         </form>
@@ -294,5 +343,19 @@ export default function RegisterPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-100">
+          <p className="text-sm text-slate-500">Loading registration form...</p>
+        </div>
+      }
+    >
+      <RegisterContent />
+    </Suspense>
   );
 }

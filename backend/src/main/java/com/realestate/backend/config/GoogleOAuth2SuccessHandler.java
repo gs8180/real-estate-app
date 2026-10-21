@@ -1,4 +1,3 @@
-
 package com.realestate.backend.config;
 
 import com.realestate.backend.entity.User;
@@ -15,10 +14,12 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Component
-public class GoogleOAuth2SuccessHandler
-                implements AuthenticationSuccessHandler {
+public class GoogleOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
         private final JwtService jwtService;
         private final UserRepository userRepository;
@@ -58,30 +59,49 @@ public class GoogleOAuth2SuccessHandler
                         return;
                 }
 
-                User user = userRepository.findByEmail(email)
-                                .orElseGet(() -> userRepository.save(
-                                                new User(name != null && !name.isBlank() ? name : email.split("@")[0], email, "", "BUYER")));
+                Optional<User> existingUser = userRepository.findByEmail(email);
 
+                String redirectUrl = (frontendRedirectUri != null && !frontendRedirectUri.isBlank())
+                                ? frontendRedirectUri
+                                : "http://localhost:3000/login/success";
+
+                // Determine base URL
+                String baseUrl = redirectUrl;
+                int pathIndex = baseUrl.indexOf("/login");
+                if (pathIndex != -1) {
+                        baseUrl = baseUrl.substring(0, pathIndex);
+                } else {
+                        int slashIndex = baseUrl.lastIndexOf("/");
+                        if (slashIndex > 8) {
+                                baseUrl = baseUrl.substring(0, slashIndex);
+                        }
+                }
+
+                // If user doesn't exist, redirect to register page to ask for role
+                if (existingUser.isEmpty()) {
+                        String registerUrl = baseUrl + "/register"
+                                        + "?email=" + URLEncoder.encode(email, StandardCharsets.UTF_8)
+                                        + "&name=" + URLEncoder.encode(name != null ? name : "", StandardCharsets.UTF_8)
+                                        + "&google=true";
+                        response.sendRedirect(registerUrl);
+                        return;
+                }
+
+                User user = existingUser.get();
                 String role = user.getRole();
-
                 if (role == null || role.isBlank()) {
                         role = "BUYER";
                 }
 
                 String token = jwtService.generateToken(email, role);
 
-                String redirectUrl = (frontendRedirectUri != null && !frontendRedirectUri.isBlank())
-                                ? frontendRedirectUri
-                                : "http://localhost:3000/login/success";
-
                 String fullRedirect = redirectUrl.contains("?")
                                 ? redirectUrl + "&token="
                                 : redirectUrl + "?token=";
 
-                response.sendRedirect(
-                                fullRedirect
-                                                + java.net.URLEncoder.encode(
-                                                                token,
-                                                                java.nio.charset.StandardCharsets.UTF_8));
+                fullRedirect += URLEncoder.encode(token, StandardCharsets.UTF_8)
+                                + "&role=" + URLEncoder.encode(role, StandardCharsets.UTF_8);
+
+                response.sendRedirect(fullRedirect);
         }
 }
