@@ -214,6 +214,21 @@ class BackendApplicationTests {
 		mockMvc.perform(get("/api/admin/users")
 						.header("Authorization", "Bearer " + adminToken))
 				.andExpect(status().isOk());
+
+		// 3. Test PUT /api/admin/users/{id}
+		User testUser = userRepository.save(new User("Old Name", "update_test_" + System.currentTimeMillis() + "@example.com", "pass123", "BUYER"));
+		cleanupUserIds.add(testUser.getId());
+
+		com.realestate.backend.dto.AdminUpdateUserRequest updateReq =
+				new com.realestate.backend.dto.AdminUpdateUserRequest("New Name", testUser.getEmail(), "", "REAL_ESTATE_AGENT");
+
+		mockMvc.perform(put("/api/admin/users/" + testUser.getId())
+						.header("Authorization", "Bearer " + adminToken)
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(objectMapper.writeValueAsString(updateReq)))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.name").value("New Name"))
+				.andExpect(jsonPath("$.role").value("REAL_ESTATE_AGENT"));
 	}
 
 	@Test

@@ -194,7 +194,7 @@ export default function UserManagementPage() {
         payload.password = editPassword.trim();
       }
 
-      const response = await fetch(`${API}/api/admin/users/${editingUser.id}`, {
+      let response = await fetch(`${API}/api/admin/users/${editingUser.id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -203,9 +203,31 @@ export default function UserManagementPage() {
         body: JSON.stringify(payload),
       });
 
+      // If full update fails, fallback to role update endpoint
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "Failed to update user.");
+        response = await fetch(`${API}/api/admin/users/${editingUser.id}/role?role=${encodeURIComponent(editRole)}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ role: editRole }),
+        });
+      }
+
+      if (!response.ok) {
+        let errorMsg = "Failed to update user.";
+        try {
+          const data = await response.json();
+          errorMsg = data.message || data.error || errorMsg;
+        } catch {
+          const text = await response.text();
+          if (text) errorMsg = text;
+        }
+        if (response.status === 403) {
+          errorMsg = "Access Denied: Your login session token does not have administrator privileges. Please Log Out and Log Back In.";
+        }
+        throw new Error(errorMsg);
       }
 
       setEditingUser(null);

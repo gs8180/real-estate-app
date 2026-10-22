@@ -104,17 +104,26 @@ public class AdminController {
         return ResponseEntity.ok(updated);
     }
 
-    // Change user role
+    // Change user role (supports query parameter or JSON body)
     @PutMapping("/users/{id}/role")
     public ResponseEntity<User> updateUserRole(
             @PathVariable Long id,
-            @RequestParam String role) {
+            @RequestParam(required = false) String role,
+            @RequestBody(required = false) java.util.Map<String, String> body) {
 
         User user = userRepository.findById(id)
                 .orElseThrow(() ->
                         new RuntimeException("User not found: " + id));
 
-        String normalizedRole = role.toUpperCase();
+        String targetRole = (role != null && !role.isBlank())
+                ? role
+                : (body != null ? body.get("role") : null);
+
+        if (targetRole == null || targetRole.isBlank()) {
+            throw new IllegalArgumentException("Role parameter or body is required");
+        }
+
+        String normalizedRole = targetRole.toUpperCase().trim();
 
         if (!isValidRole(normalizedRole)) {
             throw new IllegalArgumentException(
